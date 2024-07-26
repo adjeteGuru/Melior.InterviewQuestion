@@ -21,6 +21,10 @@ namespace Melior.InterviewQuestion.Data
 
         public void UpdateAccount(IAccount account)
         {
+            if (account == null)
+            {
+                throw new Exception("There is no account found to update.");
+            }
             // Update account in database, code removed for brevity
         }
     }
