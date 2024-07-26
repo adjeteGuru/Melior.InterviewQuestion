@@ -1,5 +1,4 @@
-﻿using Melior.InterviewQuestion.Data;
-using Melior.InterviewQuestion.Types;
+﻿using Melior.InterviewQuestion.Types;
 using System.Configuration;
 
 namespace Melior.InterviewQuestion.Services
@@ -87,16 +86,20 @@ namespace Melior.InterviewQuestion.Services
             {
                 account.Balance -= request.Amount;
 
-                if (dataStoreType == "Backup")
-                {
-                    var accountDataStore = new BackupAccountDataStore();
-                    accountDataStore.UpdateAccount(account);
-                }
-                else
-                {
-                    var accountDataStore = new AccountDataStore();
-                    accountDataStore.UpdateAccount(account);
-                }
+                //if (dataStoreType == "Backup")
+                //{
+                //    var accountDataStore = new BackupAccountDataStore();
+                //    accountDataStore.UpdateAccount(account);
+                //}
+                //else
+                //{
+                //    var accountDataStore = new AccountDataStore();
+                //    accountDataStore.UpdateAccount(account);
+                //}
+
+                dataStore = dataStoreFactory.CreateDataStore(dataStoreType);
+
+                dataStore.UpdateAccount(account);
             }
 
             return result;
