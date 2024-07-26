@@ -10,6 +10,7 @@ namespace Melior.InterviewQuestion.Tests.ServicesTests
 {
     public class GivenAPaymentServiceIsCalled
     {
+        private Account account;
         private readonly Mock<IDataStore> mockIDataStore;
         private readonly Mock<IDataStoreFactory> mockIDataStoreFactory;
         private readonly Mock<IConfiguration> mockIConfiguration;
@@ -18,16 +19,16 @@ namespace Melior.InterviewQuestion.Tests.ServicesTests
 
         public GivenAPaymentServiceIsCalled()
         {
-            var account = new Account()
+            account = new Account()
             {
                 AccountNumber = "1234-5678",
                 AllowedPaymentSchemes = AllowedPaymentSchemes.FasterPayments,
                 Balance = 500,
                 Status = AccountStatus.Live
-            };
+            };          
 
             mockIDataStore = new Mock<IDataStore>();
-            mockIDataStore.Setup(x => x.GetAccount(It.IsAny<string>())).Returns(account);
+            mockIDataStore.Setup(x => x.GetAccount(It.IsAny<string>())).Returns(account);           
             mockIDataStoreFactory = new Mock<IDataStoreFactory>();
             mockIDataStoreFactory.Setup(x => x.CreateDataStore(It.IsAny<string>()))
                 .Returns(mockIDataStore.Object);
@@ -212,6 +213,109 @@ namespace Melior.InterviewQuestion.Tests.ServicesTests
             };
 
             mockIDataStore.Setup(x => x.GetAccount(It.IsAny<string>())).Returns(account);
+
+            var type = Enum.Parse<PaymentScheme>(paymentScheme);
+            var request = new MakePaymentRequest()
+            {
+                Amount = 50,
+                CreditorAccountNumber = "Test001",
+                DebtorAccountNumber = "Test002",
+                PaymentDate = DateTime.Now,
+                PaymentScheme = type
+            };
+
+            var result = systemUnderTest.MakePayment(request);
+            result.Success.Should().BeFalse();
+        }
+
+        [Theory]
+        [InlineData("FasterPayments", "FasterPayments")]
+        [InlineData("Bacs", "Bacs")]
+        [InlineData("Chaps", "Chaps")]
+        public void MakePayment_WhenValidRequestTypeWithTheRightSchemeAreSentToUpdatAccount_ThenUpdateAccountIsInvoked(string paymentScheme, string allowedPaymentScheme)
+        {
+            var scheme = Enum.Parse<AllowedPaymentSchemes>(allowedPaymentScheme);           
+
+            var accountUpdated = new Account()
+            {
+                AccountNumber = "1234-5678",
+                AllowedPaymentSchemes = scheme,
+                Balance = 500,
+                Status = AccountStatus.Live
+            };
+
+            mockIDataStore.Setup(x => x.GetAccount(It.IsAny<string>())).Returns(accountUpdated);
+            mockIDataStore.Setup(x => x.UpdateAccount(It.IsAny<Account>()))
+                 .Callback<IAccount>(x => { _ = accountUpdated; });
+
+            var type = Enum.Parse<PaymentScheme>(paymentScheme);
+            var request = new MakePaymentRequest()
+            {
+                Amount = 50,
+                CreditorAccountNumber = "Test001",
+                DebtorAccountNumber = "Test002",
+                PaymentDate = DateTime.Now,
+                PaymentScheme = type
+            };
+
+            var result = systemUnderTest.MakePayment(request);
+            mockIDataStore.Verify(x => x.UpdateAccount(It.IsAny<Account>()), Times.Once);
+        }
+
+        [Theory]
+        [InlineData("FasterPayments", "FasterPayments")]
+        [InlineData("Bacs", "Bacs")]
+        [InlineData("Chaps", "Chaps")]
+        public void MakePayment_WhenValidRequestTypeWithTheRightSchemeAreSentToUpdatAccount_ThenTheExpectedResultIsReturned(string paymentScheme, string allowedPaymentScheme)
+        {
+            var scheme = Enum.Parse<AllowedPaymentSchemes>(allowedPaymentScheme);
+
+            var accountUpdated = new Account()
+            {
+                AccountNumber = "1234-5678",
+                AllowedPaymentSchemes = scheme,
+                Balance = 500,
+                Status = AccountStatus.Live
+            };
+
+            mockIDataStore.Setup(x => x.GetAccount(It.IsAny<string>())).Returns(accountUpdated);
+            mockIDataStore.Setup(x => x.UpdateAccount(It.IsAny<Account>()))
+                 .Callback<IAccount>(x => { _ = accountUpdated; });
+
+            var type = Enum.Parse<PaymentScheme>(paymentScheme);
+            var request = new MakePaymentRequest()
+            {
+                Amount = 50,
+                CreditorAccountNumber = "Test001",
+                DebtorAccountNumber = "Test002",
+                PaymentDate = DateTime.Now,
+                PaymentScheme = type
+            };
+
+            var result = systemUnderTest.MakePayment(request);
+            result.Success.Should().BeTrue();
+        }
+
+        [Theory]
+        [InlineData("FasterPayments", "Bacs")]
+        [InlineData("Bacs", "FasterPayments")]
+        [InlineData("Chaps", "Bacs")]
+        [InlineData("Chaps", "FasterPayments")]
+        public void MakePayment_WhenValidRequestTypeWithTheWrongSchemeAreSentToUpdatAccount_ThenTheExpectedResultIsReturned(string paymentScheme, string allowedPaymentScheme)
+        {
+            var scheme = Enum.Parse<AllowedPaymentSchemes>(allowedPaymentScheme);
+
+            var accountUpdated = new Account()
+            {
+                AccountNumber = "1234-5678",
+                AllowedPaymentSchemes = scheme,
+                Balance = 500,
+                Status = AccountStatus.Live
+            };
+
+            mockIDataStore.Setup(x => x.GetAccount(It.IsAny<string>())).Returns(accountUpdated);
+            mockIDataStore.Setup(x => x.UpdateAccount(It.IsAny<Account>()))
+                 .Callback<IAccount>(x => { _ = accountUpdated; });
 
             var type = Enum.Parse<PaymentScheme>(paymentScheme);
             var request = new MakePaymentRequest()
