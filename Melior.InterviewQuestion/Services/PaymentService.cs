@@ -1,6 +1,5 @@
 ﻿using Melior.InterviewQuestion.Types;
 using System;
-using System.Configuration;
 
 namespace Melior.InterviewQuestion.Services
 {
@@ -8,17 +7,20 @@ namespace Melior.InterviewQuestion.Services
     {
         private IDataStore dataStore;
         private readonly IDataStoreFactory dataStoreFactory;
+        private readonly IConfiguration configuration;
 
-        public PaymentService(IDataStore dataStore, IDataStoreFactory dataStoreFactory)
+        public PaymentService(IDataStore dataStore, IDataStoreFactory dataStoreFactory, IConfiguration configuration)
         {
             this.dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
             this.dataStoreFactory = dataStoreFactory ?? throw new ArgumentNullException(nameof(dataStoreFactory));
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
-            var dataStoreType = ConfigurationManager.AppSettings["DataStoreType"];
-
+            //var dataStoreType = ConfigurationManager.AppSettings["DataStoreType"];
+            var dataStoreType = configuration.DataStoreType;
+            
             Account account = null;
            
             dataStore = dataStoreFactory.CreateDataStore(dataStoreType);
