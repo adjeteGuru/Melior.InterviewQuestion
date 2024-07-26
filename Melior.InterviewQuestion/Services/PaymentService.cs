@@ -1,5 +1,5 @@
 ﻿using Melior.InterviewQuestion.Types;
-using System.Configuration;
+using System;
 
 namespace Melior.InterviewQuestion.Services
 {
@@ -7,23 +7,28 @@ namespace Melior.InterviewQuestion.Services
     {
         private IDataStore dataStore;
         private readonly IDataStoreFactory dataStoreFactory;
+        private IConfiguration configuration;
+        private IAccount account;
 
-        public PaymentService(IDataStore dataStore, IDataStoreFactory dataStoreFactory)
+        public PaymentService(
+            IDataStore dataStore,
+            IDataStoreFactory dataStoreFactory,
+            IConfiguration configuration,
+            IAccount account)
         {
-            this.dataStore = dataStore;
-            this.dataStoreFactory = dataStoreFactory;
+            this.dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
+            this.dataStoreFactory = dataStoreFactory ?? throw new ArgumentNullException(nameof(dataStoreFactory));
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            this.account = account ?? throw new ArgumentNullException(nameof(account));
         }
 
         public MakePaymentResult MakePayment(MakePaymentRequest request)
         {
-            var dataStoreType = ConfigurationManager.AppSettings["DataStoreType"];
-
-            Account account = null;
-           
+            var dataStoreType = configuration.DataStoreType;           
+        
             dataStore = dataStoreFactory.CreateDataStore(dataStoreType);
 
             account = dataStore.GetAccount(request.DebtorAccountNumber);
-
            
             var result = GeneratePaymentResultOnRequest(request, account);
 
@@ -39,31 +44,32 @@ namespace Melior.InterviewQuestion.Services
             return result;
         }
 
-        private static MakePaymentResult GeneratePaymentResultOnRequest(MakePaymentRequest request, Account account)
-        {
+        private static MakePaymentResult GeneratePaymentResultOnRequest(MakePaymentRequest request, IAccount account)
+        {           
             var result = new MakePaymentResult();
-           
-            if (account != null)
+
+            if (account == null)
             {
-                switch (request.PaymentScheme)
-                {
-                    case PaymentScheme.Bacs:
-                        result.Success = account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs);
-                        break;
-
-                    case PaymentScheme.FasterPayments:
-                        result.Success = account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments)
-                            && account.Balance >= request.Amount;
-                        break;
-
-                    case PaymentScheme.Chaps:
-                        result.Success = account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps)
-                            && account.Status == AccountStatus.Live;
-                        break;
-                }
+                result.Success = false;
+                return result;
             }
 
-            result.Success = false;            
+            switch (request.PaymentScheme)
+            {
+                case PaymentScheme.Bacs:
+                    result.Success = account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Bacs);
+                    break;
+
+                case PaymentScheme.FasterPayments:
+                    result.Success = account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.FasterPayments)
+                        && account.Balance >= request.Amount;
+                    break;
+
+                case PaymentScheme.Chaps:
+                    result.Success = account.AllowedPaymentSchemes.HasFlag(AllowedPaymentSchemes.Chaps)
+                        && account.Status == AccountStatus.Live;
+                    break;
+            }
 
             return result;
         }
