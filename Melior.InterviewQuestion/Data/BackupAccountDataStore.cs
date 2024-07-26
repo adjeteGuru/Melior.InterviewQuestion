@@ -1,8 +1,9 @@
-﻿using Melior.InterviewQuestion.Types;
+﻿using Melior.InterviewQuestion.Services;
+using Melior.InterviewQuestion.Types;
 
 namespace Melior.InterviewQuestion.Data
 {
-    public class BackupAccountDataStore
+    public class BackupAccountDataStore : IDataStore
     {
         public Account GetAccount(string accountNumber)
         {
