@@ -2,7 +2,7 @@ using FluentAssertions;
 using Melior.InterviewQuestion.Data;
 using Xunit;
 
-namespace Melior.InterviewQuestion.Tests
+namespace Melior.InterviewQuestion.Tests.ServicesTests
 {
     public class GivenDataStoreFactoryIsCalled
     {

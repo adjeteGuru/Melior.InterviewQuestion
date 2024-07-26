@@ -1,4 +1,5 @@
 ﻿using Melior.InterviewQuestion.Types;
+using System;
 using System.Configuration;
 
 namespace Melior.InterviewQuestion.Services
@@ -10,8 +11,8 @@ namespace Melior.InterviewQuestion.Services
 
         public PaymentService(IDataStore dataStore, IDataStoreFactory dataStoreFactory)
         {
-            this.dataStore = dataStore;
-            this.dataStoreFactory = dataStoreFactory;
+            this.dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
+            this.dataStoreFactory = dataStoreFactory ?? throw new ArgumentNullException(nameof(dataStoreFactory));
         }
 
         public MakePaymentResult MakePayment(MakePaymentRequest request)
