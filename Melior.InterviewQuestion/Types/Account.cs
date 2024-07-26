@@ -1,6 +1,8 @@
-﻿namespace Melior.InterviewQuestion.Types
+﻿using Melior.InterviewQuestion.Services;
+
+namespace Melior.InterviewQuestion.Types
 {
-    public class Account
+    public class Account : IAccount
     {
         public string AccountNumber { get; set; }
         public decimal Balance { get; set; }
