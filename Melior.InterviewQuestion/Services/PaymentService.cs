@@ -7,7 +7,7 @@ namespace Melior.InterviewQuestion.Services
     {
         private IDataStore dataStore;
         private readonly IDataStoreFactory dataStoreFactory;
-        private IConfiguration configuration;
+        private readonly IConfiguration configuration;
         private IAccount account;
 
         public PaymentService(
